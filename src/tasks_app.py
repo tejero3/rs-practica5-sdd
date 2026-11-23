@@ -88,6 +88,20 @@ def editar_tasca(identificador, titol=None, assignatura=None, estat=None,
     return tasca
 
 
+def completar_tasca(identificador, ruta=RUTA_DADES):
+    """Marca com a completada la tasca identificada pel seu ID."""
+    tasques = carregar_tasques(ruta)
+    tasca = next((t for t in tasques if t.id == identificador), None)
+    if tasca is None:
+        # RF-08: un ID inexistent mostra el mateix error que a editar_tasca.
+        print(f"Error: No s'ha trobat cap tasca amb ID {identificador}")
+        return None
+    tasca.estat = "completada"
+    desar_tasques(tasques, ruta)
+    print(f"Tasca [ID: {identificador}] marcada com a completada")
+    return tasca
+
+
 def llistar_tasques(ruta=RUTA_DADES):
     """Mostra per pantalla totes les tasques registrades o l'estat buit."""
     tasques = carregar_tasques(ruta)
@@ -100,7 +114,7 @@ def llistar_tasques(ruta=RUTA_DADES):
 
 
 def main(argv=None):
-    """Configura la CLI i executa l'ordre add, edit o list sol·licitada."""
+    """Configura la CLI i executa l'ordre add, edit, complete o list."""
     analitzador = argparse.ArgumentParser(description="Gestiona les tasques acadèmiques.")
     comandes = analitzador.add_subparsers(dest="comanda", required=True)
 
@@ -116,6 +130,9 @@ def main(argv=None):
     editar.add_argument("--status", dest="estat", help="Nou estat de la tasca")
     editar.add_argument("--due", dest="data_limit", help="Nova data límit YYYY-MM-DD")
 
+    completar = comandes.add_parser("complete", help="Marca una tasca com a completada")
+    completar.add_argument("--id", type=int, required=True, help="Identificador de la tasca")
+
     comandes.add_parser("list", help="Mostra totes les tasques registrades")
 
     arguments = analitzador.parse_args(argv)
@@ -129,6 +146,8 @@ def main(argv=None):
             estat=arguments.estat,
             data_limit=arguments.data_limit,
         )
+    elif arguments.comanda == "complete":
+        completar_tasca(arguments.id)
     elif arguments.comanda == "list":
         llistar_tasques()
 
