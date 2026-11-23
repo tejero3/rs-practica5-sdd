@@ -102,15 +102,36 @@ def completar_tasca(identificador, ruta=RUTA_DADES):
     return tasca
 
 
-def llistar_tasques(ruta=RUTA_DADES):
-    """Mostra per pantalla totes les tasques registrades o l'estat buit."""
+def etiqueta_venciment(tasca, avui):
+    """Retorna l'avis de caducitat o urgència d'una tasca pendent."""
+    if tasca.estat != "pendent" or tasca.data_limit is None:
+        return ""
+    try:
+        limit = date.fromisoformat(tasca.data_limit)
+    except ValueError:
+        return ""
+    if limit < avui:
+        return " [CADUCADA]"
+    if (limit - avui).days < 7:
+        return " [URGENT]"
+    return ""
+
+
+def llistar_tasques(ruta=RUTA_DADES, avui=None):
+    """Mostra les tasques amb la data límit i els avisos corresponents."""
     tasques = carregar_tasques(ruta)
     if not tasques:
         # GS-02: el registre sense tasques mostra un missatge explícit.
         print("Registre de tasques buit.")
         return
+    if avui is None:
+        avui = date.today()
     for tasca in tasques:
-        print(f"[{tasca.id}] {tasca.titol} ({tasca.assignatura}) - estat: {tasca.estat}")
+        linia = f"[{tasca.id}] {tasca.titol} ({tasca.assignatura}) - estat: {tasca.estat}"
+        if tasca.data_limit is not None:
+            linia += f" - límit: {tasca.data_limit}"
+        linia += etiqueta_venciment(tasca, avui)
+        print(linia)
 
 
 def main(argv=None):
