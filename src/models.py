@@ -11,6 +11,8 @@ class Task:
     assignatura: str
     # Tota tasca nova es crea amb l'estat 'pendent'.
     estat: str = "pendent"
+    # Data límit opcional en format YYYY-MM-DD; null si no s'indica.
+    data_limit: str | None = None
 
     def to_dict(self) -> dict:
         """Retorna la tasca com a diccionari amb les claus del model."""
@@ -23,12 +25,13 @@ class Task:
     @classmethod
     def from_dict(cls, dades: dict) -> "Task":
         """Construeix una tasca a partir de les claus catalanes del model."""
-        # Només es llegeixen id, titol, assignatura i estat.
+        # Les tasques antigues sense data_limit es llegeixen amb None.
         return cls(
             id=dades["id"],
             titol=dades["titol"],
             assignatura=dades["assignatura"],
             estat=dades.get("estat", "pendent"),
+            data_limit=dades.get("data_limit"),
         )
 
     @classmethod

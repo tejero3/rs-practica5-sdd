@@ -24,6 +24,7 @@ def test_crear_tasca_amb_estat_pendent(tmp_path, capsys):
             "titol": "Pràctica 1",
             "assignatura": "RS",
             "estat": "pendent",
+            "data_limit": None,
         }
     ]
 
