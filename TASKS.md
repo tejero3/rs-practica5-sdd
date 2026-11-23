@@ -31,7 +31,7 @@ Objectiu: Permetre gestionar dates de venciment, editar atributs, completar tasq
 
 - [x] Tasca 2.2: Actualitzar la funció `afegir_tasca` i el subcomandament `add` a `src/tasks_app.py` per acceptar el paràmetre `--due YYYY-MM-DD` i validar el format de la data. (Requisits RF-05 i RF-06, Escenari GS-04)
 
-- [ ] Tasca 2.3: Implementar la funcionalitat d'edició `editar_tasca` i el subcomandament `edit --id <ID>` a `src/tasks_app.py` per modificar qualsevol atribut i gestionar IDs inexistents. (Requisits RF-07 i RF-08, Escenaris GS-05 i GS-06)
+- [x] Tasca 2.3: Implementar la funcionalitat d'edició `editar_tasca` i el subcomandament `edit --id <ID>` a `src/tasks_app.py` per modificar qualsevol atribut i gestionar IDs inexistents. (Requisits RF-07 i RF-08, Escenaris GS-05 i GS-06)
 
 - [ ] Tasca 2.4: Implementar la funcionalitat `completar_tasca` i el subcomandament `complete --id <ID>` a `src/tasks_app.py` per canviar l'estat a `'completada'`. (Requisits RF-08 i RF-09, Escenari GS-07)
 

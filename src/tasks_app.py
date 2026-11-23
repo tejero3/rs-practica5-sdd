@@ -1,4 +1,4 @@
-"""Aplicació de línia de comandes per afegir i llistar tasques acadèmiques."""
+"""Aplicació de línia de comandes per gestionar tasques acadèmiques."""
 
 import argparse
 import json
@@ -63,6 +63,31 @@ def afegir_tasca(titol, assignatura, ruta=RUTA_DADES, data_limit=None):
     return tasca
 
 
+def editar_tasca(identificador, titol=None, assignatura=None, estat=None,
+                 data_limit=None, ruta=RUTA_DADES):
+    """Modifica els atributs indicats d'una tasca identificada pel seu ID."""
+    if not es_data_valida(data_limit):
+        print(f"Error: La data límit '{data_limit}' no és vàlida. Format esperat: YYYY-MM-DD")
+        return None
+    tasques = carregar_tasques(ruta)
+    tasca = next((t for t in tasques if t.id == identificador), None)
+    if tasca is None:
+        # RF-08: un ID inexistent mostra un error explícit i no desa res.
+        print(f"Error: No s'ha trobat cap tasca amb ID {identificador}")
+        return None
+    if titol is not None:
+        tasca.titol = titol
+    if assignatura is not None:
+        tasca.assignatura = assignatura
+    if estat is not None:
+        tasca.estat = estat
+    if data_limit is not None:
+        tasca.data_limit = data_limit
+    desar_tasques(tasques, ruta)
+    print(f"Tasca [ID: {identificador}] actualitzada amb èxit")
+    return tasca
+
+
 def llistar_tasques(ruta=RUTA_DADES):
     """Mostra per pantalla totes les tasques registrades o l'estat buit."""
     tasques = carregar_tasques(ruta)
@@ -75,7 +100,7 @@ def llistar_tasques(ruta=RUTA_DADES):
 
 
 def main(argv=None):
-    """Configura la CLI i executa l'ordre add o list sol·licitada."""
+    """Configura la CLI i executa l'ordre add, edit o list sol·licitada."""
     analitzador = argparse.ArgumentParser(description="Gestiona les tasques acadèmiques.")
     comandes = analitzador.add_subparsers(dest="comanda", required=True)
 
@@ -84,11 +109,26 @@ def main(argv=None):
     afegir.add_argument("--subject", required=True, help="Assignatura de la tasca")
     afegir.add_argument("--due", help="Data límit opcional en format YYYY-MM-DD")
 
+    editar = comandes.add_parser("edit", help="Modifica els atributs d'una tasca")
+    editar.add_argument("--id", type=int, required=True, help="Identificador de la tasca")
+    editar.add_argument("--title", help="Nou títol de la tasca")
+    editar.add_argument("--subject", help="Nova assignatura de la tasca")
+    editar.add_argument("--status", dest="estat", help="Nou estat de la tasca")
+    editar.add_argument("--due", dest="data_limit", help="Nova data límit YYYY-MM-DD")
+
     comandes.add_parser("list", help="Mostra totes les tasques registrades")
 
     arguments = analitzador.parse_args(argv)
     if arguments.comanda == "add":
         afegir_tasca(arguments.title, arguments.subject, data_limit=arguments.due)
+    elif arguments.comanda == "edit":
+        editar_tasca(
+            arguments.id,
+            titol=arguments.title,
+            assignatura=arguments.subject,
+            estat=arguments.estat,
+            data_limit=arguments.data_limit,
+        )
     elif arguments.comanda == "list":
         llistar_tasques()
 
