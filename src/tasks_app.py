@@ -2,6 +2,8 @@
 
 import argparse
 import json
+import re
+from datetime import date
 from pathlib import Path
 
 try:
@@ -32,12 +34,29 @@ def desar_tasques(tasques, ruta=RUTA_DADES):
     ruta.write_text(json.dumps(contingut, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def afegir_tasca(titol, assignatura, ruta=RUTA_DADES):
+def es_data_valida(data_limit):
+    """Comprova que la data límit sigui real i segueixi el format YYYY-MM-DD."""
+    if data_limit is None:
+        return True
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", data_limit):
+        return False
+    try:
+        date.fromisoformat(data_limit)
+    except ValueError:
+        return False
+    return True
+
+
+def afegir_tasca(titol, assignatura, ruta=RUTA_DADES, data_limit=None):
     """Crea una tasca nova amb estat 'pendent' i la desa al registre."""
+    # RF-06: una data invàlida rebutja l'operació abans de tocar el fitxer.
+    if not es_data_valida(data_limit):
+        print(f"Error: La data límit '{data_limit}' no és vàlida. Format esperat: YYYY-MM-DD")
+        return None
     tasques = carregar_tasques(ruta)
     # L'identificador és superior al de totes les tasques emmagatzemades.
     identificador = max((tasca.id for tasca in tasques), default=0) + 1
-    tasca = Task(id=identificador, titol=titol, assignatura=assignatura)
+    tasca = Task(id=identificador, titol=titol, assignatura=assignatura, data_limit=data_limit)
     tasques.append(tasca)
     desar_tasques(tasques, ruta)
     print(f"Tasca [ID: {tasca.id}] creada amb èxit")
@@ -63,12 +82,13 @@ def main(argv=None):
     afegir = comandes.add_parser("add", help="Crea una nova tasca")
     afegir.add_argument("--title", required=True, help="Títol de la tasca")
     afegir.add_argument("--subject", required=True, help="Assignatura de la tasca")
+    afegir.add_argument("--due", help="Data límit opcional en format YYYY-MM-DD")
 
     comandes.add_parser("list", help="Mostra totes les tasques registrades")
 
     arguments = analitzador.parse_args(argv)
     if arguments.comanda == "add":
-        afegir_tasca(arguments.title, arguments.subject)
+        afegir_tasca(arguments.title, arguments.subject, data_limit=arguments.due)
     elif arguments.comanda == "list":
         llistar_tasques()
 
