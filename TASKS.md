@@ -37,5 +37,5 @@ Objectiu: Permetre gestionar dates de venciment, editar atributs, completar tasq
 
 - [x] Tasca 2.5: Actualitzar `llistar_tasques` (`list`) a `src/tasks_app.py` per mostrar la data límit (quan no sigui nul·la) i calcular les etiquetes `[CADUCADA]` i `[URGENT]` segons la data actual. (Requisits RF-10 i RF-11, Escenari GS-08)
 
-- [ ] Tasca 2.6: Afegir els tests d'integració i unitaris a `test/test_tasks_app.py` per cobrir els escenaris GS-04, GS-05, GS-06, GS-07 i GS-08, i validar amb `python3 -m pytest test`.
+- [x] Tasca 2.6: Afegir els tests d'integració i unitaris a `test/test_tasks_app.py` per cobrir els escenaris GS-04, GS-05, GS-06, GS-07 i GS-08, i validar amb `python3 -m pytest test`.
 
