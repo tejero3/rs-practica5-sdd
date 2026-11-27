@@ -139,8 +139,8 @@ def calcular_resum(tasques, avui):
     }
 
 
-def llistar_tasques(ruta=RUTA_DADES, avui=None, resum=False):
-    """Mostra les tasques amb avisos o el resum global del registre."""
+def llistar_tasques(ruta=RUTA_DADES, avui=None, resum=False, assignatura=None):
+    """Mostra les tasques amb avisos, el resum global o les d'una assignatura."""
     tasques = carregar_tasques(ruta)
     if avui is None:
         avui = date.today()
@@ -157,6 +157,16 @@ def llistar_tasques(ruta=RUTA_DADES, avui=None, resum=False):
         # GS-02: el registre sense tasques mostra un missatge explícit.
         print("Registre de tasques buit.")
         return
+    if assignatura is not None:
+        # RF-13: es compara l'assignatura completa sense tenir en compte la caixa.
+        tasques = [
+            tasca for tasca in tasques
+            if tasca.assignatura.casefold() == assignatura.casefold()
+        ]
+        if not tasques:
+            # RF-15: un registre no buit sense coincidències ho indica explícitament.
+            print("No s'ha trobat cap tasca que coincideixi amb els filtres.")
+            return
     for tasca in tasques:
         linia = f"[{tasca.id}] {tasca.titol} ({tasca.assignatura}) - estat: {tasca.estat}"
         if tasca.data_limit is not None:
@@ -189,6 +199,9 @@ def main(argv=None):
     llistat.add_argument(
         "--summary", action="store_true", help="Mostra el resum global del registre"
     )
+    llistat.add_argument(
+        "--subject", help="Mostra només les tasques d'una assignatura"
+    )
 
     arguments = analitzador.parse_args(argv)
     if arguments.comanda == "add":
@@ -204,7 +217,7 @@ def main(argv=None):
     elif arguments.comanda == "complete":
         completar_tasca(arguments.id)
     elif arguments.comanda == "list":
-        llistar_tasques(resum=arguments.summary)
+        llistar_tasques(resum=arguments.summary, assignatura=arguments.subject)
 
 
 if __name__ == "__main__":
