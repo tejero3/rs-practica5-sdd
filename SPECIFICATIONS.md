@@ -1,4 +1,4 @@
-# SPECIFICATIONS.md — Sistema Tasks_app (v1.0)
+# SPECIFICATIONS.md — Sistema Tasks_app (v3.0)
 
 ## 1. Visió General
 Tasks_app és una eina CLI lleugera per ajudar als estudiants a gestionar les seves tasques acadèmiques diàries.
@@ -10,6 +10,10 @@ Tasks_app és una eina CLI lleugera per ajudar als estudiants a gestionar les se
 - US-04: Com a estudiant, vull poder modificar qualsevol atribut d'una tasca existent per corregir errors de registre.
 - US-05: Com a estudiant, vull marcar una tasca com a completada per portar un control real de la feina feta.
 - US-06: Com a estudiant, vull veure avisos visuals a la llista quan una tasca estigui caducada o a punt de vèncer per prioritzar les meves entregues.
+
+- US-07: Com a estudiant, vull veure un resum del registre per saber quanta feina em queda i quina requereix atenció.
+- US-08: Com a estudiant, vull llistar les tasques d'una assignatura per centrar-me en aquella matèria.
+- US-09: Com a estudiant, vull cercar una paraula al títol per trobar les tasques que hi coincideixen.
 
 ## 3. Model de Dades (Mermaid)
 ```mermaid
@@ -35,6 +39,12 @@ classDiagram
 - RF-09: El sistema tasks_app ha de proveir a l'estudiant la capacitat de marcar una tasca existent com a `'completada'` mitjançant el comandament `complete --id <ID>`.
 - RF-10: Si una tasca amb estat `'pendent'` té una data límit estrictament anterior al dia actual, el sistema tasks_app ha de mostrar l'etiqueta `[CADUCADA]` al final de la seva línia en executar el comandament `list`.
 - RF-11: Si una tasca amb estat `'pendent'` té una data límit igual o posterior al dia actual i a menys de 7 dies vista (diferència de 0 a 6 dies), el sistema tasks_app ha de mostrar l'etiqueta `[URGENT]` al final de la seva línia en executar el comandament `list`.
+
+- RF-12: El sistema tasks_app ha de proveir a l'estudiant la capacitat de consultar, mitjançant `list --summary`, els recomptes de totes les tasques del registre, de les pendents, de les completades, de les caducades i de les urgents. El recompte de caducades i urgents ha d'aplicar els criteris RF-10 i RF-11, respectivament, i ambdós són subconjunts de les pendents. En un registre buit, tots els recomptes han de ser zero.
+- RF-13: El sistema tasks_app ha de proveir a l'estudiant la capacitat de llistar les tasques d'una assignatura mitjançant `list --subject <assignatura>`, comparant l'assignatura completa sense distingir majúscules de minúscules.
+- RF-14: El sistema tasks_app ha de proveir a l'estudiant la capacitat de llistar les tasques que contenen un fragment al títol mitjançant `list --keyword <paraula>`, sense distingir majúscules de minúscules. Si s'indiquen ambdós filtres, cada tasca mostrada ha de complir-los tots dos.
+- RF-15: Si cap tasca no compleix els filtres en un registre amb tasques, el sistema tasks_app ha de mostrar `No s'ha trobat cap tasca que coincideixi amb els filtres.` Si el registre és buit, ha de mostrar `Registre de tasques buit.` Les coincidències s'han de mostrar en l'ordre i amb el format del llistat habitual.
+- RF-16: Si s'indica `--summary` juntament amb algun filtre, el sistema tasks_app ha de rebutjar la comanda amb codi de sortida 2 i el missatge `--summary no es pot combinar amb --subject ni --keyword`.
 
 ## 5. Criteris d’acceptació i proves (Gherkin scenarios)
 - GS-01: Creació correcta d'una tasca
@@ -94,3 +104,40 @@ classDiagram
     "[2] Tasca propera (SO) - estat: pendent - límit: 2026-11-27 [URGENT]"
     "[3] Tasca llunyana (BD) - estat: pendent - límit: 2026-12-15"
     "[4] Tasca ja feta (RS) - estat: completada - límit: 2026-11-18"
+
+- GS-09: Resum global (RF-12)
+  Atès que avui és `2026-11-23` i el registre conté les quatre tasques del GS-08
+  quan l'estudiant executa `python3 src/tasks_app.py list --summary`
+  aleshores el sistema mostra, en línies consecutives:
+    "Total: 4"
+    "Pendents: 3"
+    "Completades: 1"
+    "Caducades: 1"
+    "Urgents: 1"
+
+- GS-10: Resum del registre buit (RF-12)
+  Atès que el registre és buit
+  quan l'estudiant executa `python3 src/tasks_app.py list --summary`
+  aleshores el sistema mostra `Total: 0`, `Pendents: 0`, `Completades: 0`, `Caducades: 0` i `Urgents: 0`, cadascun en una línia.
+
+- GS-11: Filtre per assignatura (RF-13, RF-15)
+  Atès que el registre conté `[1] Pràctica (RS) - estat: pendent` i `[2] Examen (RS2) - estat: pendent`
+  quan l'estudiant executa `python3 src/tasks_app.py list --subject rs`
+  aleshores el sistema mostra només `[1] Pràctica (RS) - estat: pendent`.
+
+- GS-12: Cerca d'un fragment al títol (RF-14, RF-15)
+  Atès que el registre conté `[1] Examen parcial (SO) - estat: pendent` i `[2] Projecte (EXAMEN) - estat: pendent`
+  quan l'estudiant executa `python3 src/tasks_app.py list --keyword EXAM`
+  aleshores el sistema mostra només `[1] Examen parcial (SO) - estat: pendent`.
+
+- GS-13: Filtres combinats i cerca sense coincidències (RF-13 a RF-15)
+  Atès que el registre conté tasques titulades `Examen parcial` i `Projecte` a RS, i `Examen final` a SO
+  quan l'estudiant executa `python3 src/tasks_app.py list --subject RS --keyword examen`
+  aleshores el sistema mostra només la tasca `Examen parcial`
+  i quan executa `python3 src/tasks_app.py list --subject RS --keyword final`
+  aleshores el sistema mostra `No s'ha trobat cap tasca que coincideixi amb els filtres.`.
+
+- GS-14: Resum incompatible amb els filtres (RF-16)
+  Atès que l'estudiant vol executar un llistat
+  quan executa `python3 src/tasks_app.py list --summary --subject RS`
+  aleshores el sistema finalitza amb codi 2 i indica `--summary no es pot combinar amb --subject ni --keyword`.
