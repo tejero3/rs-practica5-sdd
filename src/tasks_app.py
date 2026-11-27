@@ -139,8 +139,10 @@ def calcular_resum(tasques, avui):
     }
 
 
-def llistar_tasques(ruta=RUTA_DADES, avui=None, resum=False, assignatura=None):
-    """Mostra les tasques amb avisos, el resum global o les d'una assignatura."""
+def llistar_tasques(
+    ruta=RUTA_DADES, avui=None, resum=False, assignatura=None, paraula=None
+):
+    """Mostra les tasques amb avisos, el resum global o les filtrades."""
     tasques = carregar_tasques(ruta)
     if avui is None:
         avui = date.today()
@@ -163,10 +165,16 @@ def llistar_tasques(ruta=RUTA_DADES, avui=None, resum=False, assignatura=None):
             tasca for tasca in tasques
             if tasca.assignatura.casefold() == assignatura.casefold()
         ]
-        if not tasques:
-            # RF-15: un registre no buit sense coincidències ho indica explícitament.
-            print("No s'ha trobat cap tasca que coincideixi amb els filtres.")
-            return
+    if paraula is not None:
+        # RF-14: es cerca un fragment del títol sense distingir majúscules.
+        tasques = [
+            tasca for tasca in tasques
+            if paraula.casefold() in tasca.titol.casefold()
+        ]
+    if (assignatura is not None or paraula is not None) and not tasques:
+        # RF-15: un registre no buit sense coincidències ho indica explícitament.
+        print("No s'ha trobat cap tasca que coincideixi amb els filtres.")
+        return
     for tasca in tasques:
         linia = f"[{tasca.id}] {tasca.titol} ({tasca.assignatura}) - estat: {tasca.estat}"
         if tasca.data_limit is not None:
@@ -202,8 +210,19 @@ def main(argv=None):
     llistat.add_argument(
         "--subject", help="Mostra només les tasques d'una assignatura"
     )
+    llistat.add_argument(
+        "--keyword", dest="paraula", help="Cerca un fragment al títol de les tasques"
+    )
 
     arguments = analitzador.parse_args(argv)
+    if arguments.comanda == "list":
+        if arguments.summary and (
+            arguments.subject is not None or arguments.paraula is not None
+        ):
+            # RF-16: el resum global només es permet sense cap filtre.
+            analitzador.error(
+                "--summary no es pot combinar amb --subject ni --keyword"
+            )
     if arguments.comanda == "add":
         afegir_tasca(arguments.title, arguments.subject, data_limit=arguments.due)
     elif arguments.comanda == "edit":
@@ -217,7 +236,11 @@ def main(argv=None):
     elif arguments.comanda == "complete":
         completar_tasca(arguments.id)
     elif arguments.comanda == "list":
-        llistar_tasques(resum=arguments.summary, assignatura=arguments.subject)
+        llistar_tasques(
+            resum=arguments.summary,
+            assignatura=arguments.subject,
+            paraula=arguments.paraula,
+        )
 
 
 if __name__ == "__main__":
