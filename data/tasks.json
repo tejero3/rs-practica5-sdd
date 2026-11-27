@@ -1,1 +1,58 @@
-[]
+[
+  {
+    "id": 1,
+    "titol": "Pràctica 1 SDD",
+    "assignatura": "RS",
+    "estat": "pendent",
+    "data_limit": "2026-11-20"
+  },
+  {
+    "id": 2,
+    "titol": "Examen parcial",
+    "assignatura": "SO",
+    "estat": "pendent",
+    "data_limit": "2026-11-29"
+  },
+  {
+    "id": 3,
+    "titol": "Examen final",
+    "assignatura": "SO",
+    "estat": "pendent",
+    "data_limit": "2026-12-03"
+  },
+  {
+    "id": 4,
+    "titol": "Projecte de bases de dades",
+    "assignatura": "BD",
+    "estat": "pendent",
+    "data_limit": "2026-12-20"
+  },
+  {
+    "id": 5,
+    "titol": "Apunts de teoria",
+    "assignatura": "FIS",
+    "estat": "pendent",
+    "data_limit": null
+  },
+  {
+    "id": 6,
+    "titol": "Lliurament de pràctiques",
+    "assignatura": "RS",
+    "estat": "completada",
+    "data_limit": "2026-11-18"
+  },
+  {
+    "id": 7,
+    "titol": "Treball de literatura",
+    "assignatura": "CAT",
+    "estat": "completada",
+    "data_limit": null
+  },
+  {
+    "id": 8,
+    "titol": "Qüestionari setmanal",
+    "assignatura": "RS",
+    "estat": "pendent",
+    "data_limit": null
+  }
+]
