@@ -1,1 +1,6 @@
 https://github.com/tejero3/rs-practica5-sdd.git
+
+Equip:
+- Ivan Tejero (NIU 1746257)
+- Alex Cadevall (NIU 1744540)
+- Oriol Vila (NIU 1748160)
