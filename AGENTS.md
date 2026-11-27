@@ -7,8 +7,12 @@
 
 ## Comandes de Desenvolupament
 - Executar aplicació: `python3 src/tasks_app.py`
+  - Crear tasca: `python3 src/tasks_app.py add --title <títol> --subject <assignatura> [--due YYYY-MM-DD]`
+  - Modificar tasca: `python3 src/tasks_app.py edit --id <ID> [--title <títol>] [--subject <assignatura>] [--status <estat>] [--due YYYY-MM-DD]`
+  - Completar tasca: `python3 src/tasks_app.py complete --id <ID>`
+  - Llistar tasques: `python3 src/tasks_app.py list [--summary | --subject <assignatura> | --keyword <paraula>]`
 - Executar tots els tests: `python3 -m pytest test`
-- Executar test únic: `python3 -m pytest test/test_task.py`
+- Executar test únic: `python3 -m pytest test/test_tasks_app.py`
 
 ## Convencions de Codi
 - Estil: PEP8.

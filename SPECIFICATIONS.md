@@ -1,16 +1,30 @@
-# SPECIFICATIONS.md — Sistema Tasks_app (v3.0)
+# SPECIFICATIONS.md — Sistema Tasks_app (v3.1)
 
 ## 1. Visió General
 Tasks_app és una eina CLI lleugera per ajudar als estudiants a gestionar les seves tasques acadèmiques diàries.
 
+
+### Historial d'iteracions
+| Versió | Iteració | Incorporacions |
+|---|---|---|
+| v1.0 | Iteració 1 (MVP) | US-01..US-02, RF-01..RF-04, GS-01..GS-03: crear i llistar tasques |
+| v2.0 | Iteració 2 | US-03..US-06, RF-05..RF-11, GS-04..GS-08: data límit, edició, completar tasques, etiquetes [CADUCADA] i [URGENT] |
+| v3.0 | Iteració 3 | US-07..US-09, RF-12..RF-16, GS-09..GS-14: resum i filtres del llistat |
+| v3.1 | Revisió | GS-15 i GS-16: escenaris d'error de la Iteració 2 (data invàlida i ID inexistent a `complete`) |
+
 ## 2. User Stories (Històries d'Usuari)
+### Iteració 1 (v1.0)
 - US-01: Com a estudiant, vull afegir una tasca amb títol i assignatura per recordar els meus deures.
 - US-02: Com a estudiant, vull veure la llista de tasques pendents per organitzar el meu temps.
+
+### Iteració 2 (v2.0)
 - US-03: Com a estudiant, vull indicar una data límit en crear una tasca per controlar quan l'he de lliurar.
 - US-04: Com a estudiant, vull poder modificar qualsevol atribut d'una tasca existent per corregir errors de registre.
 - US-05: Com a estudiant, vull marcar una tasca com a completada per portar un control real de la feina feta.
 - US-06: Com a estudiant, vull veure avisos visuals a la llista quan una tasca estigui caducada o a punt de vèncer per prioritzar les meves entregues.
 
+
+### Iteració 3 (v3.0)
 - US-07: Com a estudiant, vull veure un resum del registre per saber quanta feina em queda i quina requereix atenció.
 - US-08: Com a estudiant, vull llistar les tasques d'una assignatura per centrar-me en aquella matèria.
 - US-09: Com a estudiant, vull cercar una paraula al títol per trobar les tasques que hi coincideixen.
@@ -28,18 +42,23 @@ classDiagram
 ```
 
 ## 4. Requisits
+### Iteració 1 (v1.0)
 - RF-01 : El sistema tasks_app ha de guardar les tasques en un fitxer JSON de persistència local.
 - RF-02 : Si el fitxer `data/tasks.json` no existeix, el sistema tasks_app ha de crear `data/tasks.json`  inicialitzat amb una llista JSON buida ([])
 - RF-03 : El sistema tasks_app ha de proveir a l'estudiant la capacitat de crear una nova tasca amb estat 'pendent' mitjançant el comandament add --title <títol> --subject <assignatura>.
 - RF-04: El sistema tasks_app ha de proveir a l’estudiant la capacitat de visualitzar totes les tasques registrades (incloent-hi el seu ID, títol, assignatura i estat) mitjançant el comandament list.
+
+### Iteració 2 (v2.0)
 - RF-05: El sistema tasks_app ha de proveir a l'estudiant la capacitat d'assignar opcionalment una data límit en format `YYYY-MM-DD` en crear una tasca mitjançant el paràmetre `--due <YYYY-MM-DD>` al comandament `add` (emmagatzemant `null` si no s'indica).
-- RF-06: Si la data introduïda al paràmetre `--due` no segueix el format vàlid `YYYY-MM-DD`, el sistema tasks_app ha de rebutjar l'operació i mostrar un missatge d'error descriptiu sense desar la tasca.
+- RF-06: Si la data introduïda al paràmetre `--due` no segueix el format vàlid `YYYY-MM-DD`, el sistema tasks_app ha de rebutjar l'operació i mostrar el missatge `Error: La data límit '<data>' no és vàlida. Format esperat: YYYY-MM-DD` sense desar la tasca.
 - RF-07: El sistema tasks_app ha de proveir a l'estudiant la capacitat de modificar qualsevol atribut (títol, assignatura, estat o data límit) d'una tasca existent identificada pel seu ID mitjançant el comandament `edit --id <ID> [--title <títol>] [--subject <assignatura>] [--status <estat>] [--due <YYYY-MM-DD>]`.
 - RF-08: Si l'identificador `--id <ID>` indicat als comandaments `edit` o `complete` no existeix al registre, el sistema tasks_app ha de mostrar el missatge d'error `Error: No s'ha trobat cap tasca amb ID <ID>`.
 - RF-09: El sistema tasks_app ha de proveir a l'estudiant la capacitat de marcar una tasca existent com a `'completada'` mitjançant el comandament `complete --id <ID>`.
 - RF-10: Si una tasca amb estat `'pendent'` té una data límit estrictament anterior al dia actual, el sistema tasks_app ha de mostrar l'etiqueta `[CADUCADA]` al final de la seva línia en executar el comandament `list`.
 - RF-11: Si una tasca amb estat `'pendent'` té una data límit igual o posterior al dia actual i a menys de 7 dies vista (diferència de 0 a 6 dies), el sistema tasks_app ha de mostrar l'etiqueta `[URGENT]` al final de la seva línia en executar el comandament `list`.
 
+
+### Iteració 3 (v3.0)
 - RF-12: El sistema tasks_app ha de proveir a l'estudiant la capacitat de consultar, mitjançant `list --summary`, els recomptes de totes les tasques del registre, de les pendents, de les completades, de les caducades i de les urgents. El recompte de caducades i urgents ha d'aplicar els criteris RF-10 i RF-11, respectivament, i ambdós són subconjunts de les pendents. En un registre buit, tots els recomptes han de ser zero.
 - RF-13: El sistema tasks_app ha de proveir a l'estudiant la capacitat de llistar les tasques d'una assignatura mitjançant `list --subject <assignatura>`, comparant l'assignatura completa sense distingir majúscules de minúscules.
 - RF-14: El sistema tasks_app ha de proveir a l'estudiant la capacitat de llistar les tasques que contenen un fragment al títol mitjançant `list --keyword <paraula>`, sense distingir majúscules de minúscules. Si s'indiquen ambdós filtres, cada tasca mostrada ha de complir-los tots dos.
@@ -47,6 +66,7 @@ classDiagram
 - RF-16: Si s'indica `--summary` juntament amb algun filtre, el sistema tasks_app ha de rebutjar la comanda amb codi de sortida 2 i el missatge `--summary no es pot combinar amb --subject ni --keyword`.
 
 ## 5. Criteris d’acceptació i proves (Gherkin scenarios)
+### Iteració 1 (v1.0)
 - GS-01: Creació correcta d'una tasca
   Atès que la base de dades JSON no conté encara tasques
   quan l’estudiant executa `python src/tasks_app.py add --title 'Pràctica 1' --subject 'RS'
@@ -68,6 +88,8 @@ classDiagram
     "[1] Pràctica 1 (RS) - estat: pendent"
     "[2] Examen parcial (SO) - estat: pendent"
     
+
+### Iteració 2 (v2.0)
 - GS-04: Creació d'una tasca amb data límit vàlida
   Atès que la base de dades JSON està buida
   quan l'estudiant executa `python3 src/tasks_app.py add --title 'Lliurament SDD' --subject 'RS' --due 2026-12-02`
@@ -105,6 +127,20 @@ classDiagram
     "[3] Tasca llunyana (BD) - estat: pendent - límit: 2026-12-15"
     "[4] Tasca ja feta (RS) - estat: completada - límit: 2026-11-18"
 
+
+- GS-15: Error en crear una tasca amb una data límit invàlida (RF-06)
+  Atès que la base de dades JSON està buida
+  quan l'estudiant executa `python3 src/tasks_app.py add --title 'Pràctica 2' --subject 'RS' --due 2026-13-40`
+  aleshores el sistema mostra `Error: La data límit '2026-13-40' no és vàlida. Format esperat: YYYY-MM-DD`
+  i el fitxer `data/tasks.json` continua sense tasques.
+
+- GS-16: Error en intentar completar una tasca inexistent (RF-08)
+  Atès que no existeix cap tasca amb ID 99
+  quan l'estudiant executa `python3 src/tasks_app.py complete --id 99`
+  aleshores el sistema mostra `Error: No s'ha trobat cap tasca amb ID 99`
+  i el fitxer `data/tasks.json` no es modifica.
+
+### Iteració 3 (v3.0)
 - GS-09: Resum global (RF-12)
   Atès que avui és `2026-11-23` i el registre conté les quatre tasques del GS-08
   quan l'estudiant executa `python3 src/tasks_app.py list --summary`
