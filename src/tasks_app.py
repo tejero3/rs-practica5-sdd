@@ -102,8 +102,8 @@ def completar_tasca(identificador, ruta=RUTA_DADES):
     return tasca
 
 
-def etiqueta_venciment(tasca, avui):
-    """Retorna l'avis de caducitat o urgència d'una tasca pendent."""
+def categoria_venciment(tasca, avui):
+    """Retorna 'caducada', 'urgent' o una cadena buida segons RF-10 i RF-11."""
     if tasca.estat != "pendent" or tasca.data_limit is None:
         return ""
     try:
@@ -111,21 +111,52 @@ def etiqueta_venciment(tasca, avui):
     except ValueError:
         return ""
     if limit < avui:
-        return " [CADUCADA]"
+        return "caducada"
     if (limit - avui).days < 7:
+        return "urgent"
+    return ""
+
+
+def etiqueta_venciment(tasca, avui):
+    """Retorna l'avis de caducitat o urgència d'una tasca pendent."""
+    categoria = categoria_venciment(tasca, avui)
+    if categoria == "caducada":
+        return " [CADUCADA]"
+    if categoria == "urgent":
         return " [URGENT]"
     return ""
 
 
-def llistar_tasques(ruta=RUTA_DADES, avui=None):
-    """Mostra les tasques amb la data límit i els avisos corresponents."""
+def calcular_resum(tasques, avui):
+    """Compta les tasques totals, pendents, completades, caducades i urgents."""
+    categories = [categoria_venciment(tasca, avui) for tasca in tasques]
+    return {
+        "total": len(tasques),
+        "pendents": sum(tasca.estat == "pendent" for tasca in tasques),
+        "completades": sum(tasca.estat == "completada" for tasca in tasques),
+        "caducades": categories.count("caducada"),
+        "urgents": categories.count("urgent"),
+    }
+
+
+def llistar_tasques(ruta=RUTA_DADES, avui=None, resum=False):
+    """Mostra les tasques amb avisos o el resum global del registre."""
     tasques = carregar_tasques(ruta)
+    if avui is None:
+        avui = date.today()
+    if resum:
+        # RF-12: el resum també es mostra amb un registre buit.
+        recompte = calcular_resum(tasques, avui)
+        print(f"Total: {recompte['total']}")
+        print(f"Pendents: {recompte['pendents']}")
+        print(f"Completades: {recompte['completades']}")
+        print(f"Caducades: {recompte['caducades']}")
+        print(f"Urgents: {recompte['urgents']}")
+        return
     if not tasques:
         # GS-02: el registre sense tasques mostra un missatge explícit.
         print("Registre de tasques buit.")
         return
-    if avui is None:
-        avui = date.today()
     for tasca in tasques:
         linia = f"[{tasca.id}] {tasca.titol} ({tasca.assignatura}) - estat: {tasca.estat}"
         if tasca.data_limit is not None:
@@ -154,7 +185,10 @@ def main(argv=None):
     completar = comandes.add_parser("complete", help="Marca una tasca com a completada")
     completar.add_argument("--id", type=int, required=True, help="Identificador de la tasca")
 
-    comandes.add_parser("list", help="Mostra totes les tasques registrades")
+    llistat = comandes.add_parser("list", help="Mostra totes les tasques registrades")
+    llistat.add_argument(
+        "--summary", action="store_true", help="Mostra el resum global del registre"
+    )
 
     arguments = analitzador.parse_args(argv)
     if arguments.comanda == "add":
@@ -170,7 +204,7 @@ def main(argv=None):
     elif arguments.comanda == "complete":
         completar_tasca(arguments.id)
     elif arguments.comanda == "list":
-        llistar_tasques()
+        llistar_tasques(resum=arguments.summary)
 
 
 if __name__ == "__main__":
