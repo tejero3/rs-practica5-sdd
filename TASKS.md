@@ -49,5 +49,5 @@ Objectiu: Consultar el resum del registre i trobar tasques per assignatura o per
 - [x] Tasca 3.1: Afegir `list --summary` i calcular els cinc recomptes globals reutilitzant els criteris de venciment. (RF-12, GS-09 i GS-10)
 - [x] Tasca 3.2: Afegir `list --subject` i aplicar el filtre d'assignatura amb el format habitual de llistat. (RF-13 i RF-15, GS-11)
 - [x] Tasca 3.3: Afegir `list --keyword`, combinar els filtres i validar que el resum només es pot demanar sense filtres. (RF-14 a RF-16, GS-12 a GS-14)
-- [ ] Tasca 3.4: Afegir proves automatitzades dels escenaris GS-09 a GS-14, amb fitxer temporal i data controlada per als recomptes.
+- [x] Tasca 3.4: Afegir proves automatitzades dels escenaris GS-09 a GS-14, amb fitxer temporal i data controlada per als recomptes.
 - [ ] Tasca 3.5: Preparar dades d'exemple i validar la CLI i la suite completa amb `python3 -m pytest test`.

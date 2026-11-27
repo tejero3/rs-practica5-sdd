@@ -1,4 +1,4 @@
-"""Tests d'integració i unitaris dels escenaris GS-01 a GS-08."""
+"""Tests d'integració i unitaris dels escenaris GS-01 a GS-14."""
 
 import json
 import shutil
@@ -29,8 +29,8 @@ def ruta_temporal(tmp_path):
     return tmp_path / "data" / "tasks.json"
 
 
-def executar_cli(tmp_path, dades_inicials, *arguments):
-    """Executa la CLI en una còpia temporal i retorna sortida i ruta JSON."""
+def executar_cli(tmp_path, dades_inicials, *arguments, avui=None):
+    """Executa la CLI en una còpia temporal, amb data opcional controlada."""
     arrel = tmp_path / "projecte"
     (arrel / "src").mkdir(parents=True)
     (arrel / "data").mkdir()
@@ -38,8 +38,25 @@ def executar_cli(tmp_path, dades_inicials, *arguments):
         shutil.copy(RUTA_SRC / nom, arrel / "src" / nom)
     ruta_dades = arrel / "data" / "tasks.json"
     ruta_dades.write_text(json.dumps(dades_inicials, ensure_ascii=False), encoding="utf-8")
+    if avui is None:
+        script = arrel / "src" / "tasks_app.py"
+    else:
+        script = arrel / "main_controlada.py"
+        codi = (
+            "import sys\n"
+            f"sys.path.insert(0, {str(arrel / 'src')!r})\n"
+            "from datetime import date\n"
+            "import tasks_app\n"
+            "class DataControlada(date):\n"
+            "    @classmethod\n"
+            "    def today(cls):\n"
+            f"        return date({avui.year}, {avui.month}, {avui.day})\n"
+            "tasks_app.date = DataControlada\n"
+            "tasks_app.main()\n"
+        )
+        script.write_text(codi, encoding="utf-8")
     resultat = subprocess.run(
-        [sys.executable, str(arrel / "src" / "tasks_app.py"), *arguments],
+        [sys.executable, str(script), *arguments],
         capture_output=True,
         text=True,
         check=False,
@@ -56,6 +73,40 @@ def tasca_inicial(identificador=1, estat="pendent", data_limit=None):
         "estat": estat,
         "data_limit": data_limit,
     }
+
+
+def dades_gs08():
+    """Retorna les quatre tasques compartides pels escenaris GS-08 i GS-09."""
+    return [
+        {
+            "id": 1,
+            "titol": "Tasca antiga",
+            "assignatura": "RS",
+            "estat": "pendent",
+            "data_limit": "2026-11-20",
+        },
+        {
+            "id": 2,
+            "titol": "Tasca propera",
+            "assignatura": "SO",
+            "estat": "pendent",
+            "data_limit": "2026-11-27",
+        },
+        {
+            "id": 3,
+            "titol": "Tasca llunyana",
+            "assignatura": "BD",
+            "estat": "pendent",
+            "data_limit": "2026-12-15",
+        },
+        {
+            "id": 4,
+            "titol": "Tasca ja feta",
+            "assignatura": "RS",
+            "estat": "completada",
+            "data_limit": "2026-11-18",
+        },
+    ]
 
 
 def test_crear_tasca_amb_estat_pendent(tmp_path, capsys):
@@ -186,39 +237,7 @@ def test_llistar_tasques_amb_etiquetes_davis(tmp_path, capsys):
     ruta = ruta_temporal(tmp_path)
     ruta.parent.mkdir(parents=True, exist_ok=True)
     ruta.write_text(
-        json.dumps(
-            [
-                {
-                    "id": 1,
-                    "titol": "Tasca antiga",
-                    "assignatura": "RS",
-                    "estat": "pendent",
-                    "data_limit": "2026-11-20",
-                },
-                {
-                    "id": 2,
-                    "titol": "Tasca propera",
-                    "assignatura": "SO",
-                    "estat": "pendent",
-                    "data_limit": "2026-11-27",
-                },
-                {
-                    "id": 3,
-                    "titol": "Tasca llunyana",
-                    "assignatura": "BD",
-                    "estat": "pendent",
-                    "data_limit": "2026-12-15",
-                },
-                {
-                    "id": 4,
-                    "titol": "Tasca ja feta",
-                    "assignatura": "RS",
-                    "estat": "completada",
-                    "data_limit": "2026-11-18",
-                },
-            ],
-            ensure_ascii=False,
-        ),
+        json.dumps(dades_gs08(), ensure_ascii=False),
         encoding="utf-8",
     )
 
@@ -230,6 +249,144 @@ def test_llistar_tasques_amb_etiquetes_davis(tmp_path, capsys):
         "[3] Tasca llunyana (BD) - estat: pendent - límit: 2026-12-15",
         "[4] Tasca ja feta (RS) - estat: completada - límit: 2026-11-18",
     ]
+
+
+def test_resum_global_amb_data_controlada(tmp_path):
+    """GS-09: la CLI mostra els cinc recomptes amb la data controlada."""
+    resultat, _ = executar_cli(
+        tmp_path, dades_gs08(), "list", "--summary", avui=date(2026, 11, 23)
+    )
+
+    assert resultat.returncode == 0
+    assert resultat.stdout.splitlines() == [
+        "Total: 4",
+        "Pendents: 3",
+        "Completades: 1",
+        "Caducades: 1",
+        "Urgents: 1",
+    ]
+
+
+def test_resum_registre_buit(tmp_path):
+    """GS-10: amb el registre buit tots els recomptes del resum són zero."""
+    resultat, _ = executar_cli(tmp_path, [], "list", "--summary")
+
+    assert resultat.returncode == 0
+    assert resultat.stdout.splitlines() == [
+        "Total: 0",
+        "Pendents: 0",
+        "Completades: 0",
+        "Caducades: 0",
+        "Urgents: 0",
+    ]
+
+
+def test_filtre_per_assignatura(tmp_path):
+    """GS-11: --subject compara l'assignatura completa sense distingir la caixa."""
+    dades = [
+        {
+            "id": 1,
+            "titol": "Pràctica",
+            "assignatura": "RS",
+            "estat": "pendent",
+            "data_limit": None,
+        },
+        {
+            "id": 2,
+            "titol": "Examen",
+            "assignatura": "RS2",
+            "estat": "pendent",
+            "data_limit": None,
+        },
+    ]
+    resultat, _ = executar_cli(tmp_path, dades, "list", "--subject", "rs")
+
+    assert resultat.returncode == 0
+    assert resultat.stdout.splitlines() == ["[1] Pràctica (RS) - estat: pendent"]
+
+
+def test_cerca_fragment_al_titol(tmp_path):
+    """GS-12: --keyword només mostra les coincidències del fragment al títol."""
+    dades = [
+        {
+            "id": 1,
+            "titol": "Examen parcial",
+            "assignatura": "SO",
+            "estat": "pendent",
+            "data_limit": None,
+        },
+        {
+            "id": 2,
+            "titol": "Projecte",
+            "assignatura": "EXAMEN",
+            "estat": "pendent",
+            "data_limit": None,
+        },
+    ]
+    resultat, _ = executar_cli(tmp_path, dades, "list", "--keyword", "EXAM")
+
+    assert resultat.returncode == 0
+    assert resultat.stdout.splitlines() == ["[1] Examen parcial (SO) - estat: pendent"]
+
+
+def test_filtres_combinats_i_sense_coincidencies(tmp_path):
+    """GS-13: s'apliquen tots dos filtres i s'informa si no hi ha coincidències."""
+    dades = [
+        {
+            "id": 1,
+            "titol": "Examen parcial",
+            "assignatura": "RS",
+            "estat": "pendent",
+            "data_limit": None,
+        },
+        {
+            "id": 2,
+            "titol": "Projecte",
+            "assignatura": "RS",
+            "estat": "pendent",
+            "data_limit": None,
+        },
+        {
+            "id": 3,
+            "titol": "Examen final",
+            "assignatura": "SO",
+            "estat": "pendent",
+            "data_limit": None,
+        },
+    ]
+    coincidencia, _ = executar_cli(
+        tmp_path / "amb_coincidencia", dades, "list",
+        "--subject", "RS", "--keyword", "examen",
+    )
+    assert coincidencia.returncode == 0
+    assert coincidencia.stdout.splitlines() == [
+        "[1] Examen parcial (RS) - estat: pendent"
+    ]
+
+    sense_coincidencia, _ = executar_cli(
+        tmp_path / "sense_coincidencia", dades, "list",
+        "--subject", "RS", "--keyword", "final",
+    )
+    assert sense_coincidencia.returncode == 0
+    assert sense_coincidencia.stdout.splitlines() == [
+        "No s'ha trobat cap tasca que coincideixi amb els filtres."
+    ]
+
+
+@pytest.mark.parametrize(
+    ("filtre", "nom"),
+    [
+        (("--subject", "RS"), "subject"),
+        (("--keyword", "examen"), "keyword"),
+    ],
+)
+def test_resum_no_compatible_amb_filtres(tmp_path, filtre, nom):
+    """GS-14: --summary amb qualsevol filtre retorna codi 2 i un error."""
+    resultat, _ = executar_cli(tmp_path / nom, [], "list", "--summary", *filtre)
+
+    assert resultat.returncode == 2
+    assert "--summary no es pot combinar amb --subject ni --keyword" in resultat.stderr
+    assert resultat.stdout == ""
 
 
 @pytest.mark.parametrize(
